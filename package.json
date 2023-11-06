@@ -1,0 +1,11 @@
+{
+  "name": "natours",
+  "version": "1.0.0",
+  "description": "Learning Node, Express",
+  "main": "app.js",
+  "author": "Raoul",
+  "license": "MIT",
+  "dependencies": {
+    "express": "4"
+  }
+}
