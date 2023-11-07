@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "Learning Node, Express",
   "main": "app.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
   "author": "Raoul",
   "license": "MIT",
   "dependencies": {
-    "express": "4"
+    "express": "4",
+    "morgan": "^1.10.0"
   }
 }
