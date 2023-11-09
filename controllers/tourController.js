@@ -1,8 +1,29 @@
 const fs = require('fs');
 
 const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
+  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
 );
+
+exports.checkID = (req, res, next, val) => {
+  const id = req.params.id * 1; //this will turn id from string to number
+  if (id > tours.length) {
+    return res.status(404).json({
+      status: 'failed',
+      message: 'Tour not found.',
+    });
+  }
+  next();
+};
+
+exports.checkBody = (req, res, next) => {
+  if (!req.body.name || !req.body.price) {
+    return res.status(404).json({
+      status: 'Error',
+      message: 'Missing name or price',
+    });
+  }
+  next();
+};
 
 exports.getAllTour = (req, res) => {
   res.status(200).json({
@@ -17,15 +38,6 @@ exports.getAllTour = (req, res) => {
 
 exports.getTour = (req, res) => {
   const id = req.params.id * 1; //this will turn id from string to number
-
-  if (id > tours.length) {
-    return res.status(404).json({
-      status: 'failed',
-      requestAt: req.requestTime,
-      message: 'Tour not found.',
-    });
-  }
-
   const tour = tours.find((el) => el.id === id);
 
   res.status(200).json({
@@ -54,18 +66,11 @@ exports.createTour = (req, res) => {
           tour: newTour,
         },
       });
-    }
+    },
   );
 };
 
 exports.updateTour = (req, res) => {
-  const id = req.params.id * 1; //this will turn id from string to number
-  if (id > tours.length) {
-    return res.status(404).json({
-      status: 'failed',
-      message: 'Tour not found.',
-    });
-  }
   res.status(200).json({
     status: 'Success',
     message: 'Tour update',
@@ -88,13 +93,6 @@ exports.updateTour = (req, res) => {
 };
 
 exports.deleteTour = (req, res) => {
-  const id = req.params.id * 1; //this will turn id from string to number
-  if (id > tours.length) {
-    return res.status(404).json({
-      status: 'failed',
-      message: 'Tour not found.',
-    });
-  }
   res.status(200).json({
     status: 'Success',
     message: 'Tour Deleted',
