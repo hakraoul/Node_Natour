@@ -26,14 +26,48 @@ const Tour = require('../models/tourModel');
 // };
 
 exports.getAllTour = async (req, res) => {
-  const tours = await Tour.find();
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours: tours,
-    },
-  });
+  try {
+    //BUILD QUERY
+
+    //1. Filthering
+    const queryObj = Object.assign(req.query); //copy the object
+    const excludedFields = ['sort', 'page', 'limit', 'fields'];
+    excludedFields.forEach((el) => delete queryObj[el]); //will delete fields in excludedFields from queryObj
+
+    //2.Advance filthering
+    let queryStr = JSON.stringify(queryObj);
+    //if match will replace the string with $+matched string. g in there mean it will replace all occurance.
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (match) => `$${match}`);
+
+    const query = Tour.find(JSON.parse(queryStr));
+    // const tours = await Tour.find({
+    //   duration: req.query.duration,
+    //   difficulty: req.query.difficulty,
+    // });
+
+    // const tours = await Tour.find()
+    //   .where('duration')
+    //   .gte(5)
+    //   .where('difficulty')
+    //   .equals('easy');
+
+    //EXECUTE QUERY
+    const tours = await query;
+
+    //SEND RESPONSE
+    res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      data: {
+        tours: tours,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'failed',
+      message: error.message,
+    });
+  }
 };
 
 exports.getTour = async (req, res) => {
