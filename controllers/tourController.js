@@ -31,15 +31,32 @@ exports.getAllTour = async (req, res) => {
 
     //1. Filthering
     const queryObj = Object.assign(req.query); //copy the object
-    const excludedFields = ['sort', 'page', 'limit', 'fields'];
+    const excludedFields = ['sort', 'page', 'limit'];
     excludedFields.forEach((el) => delete queryObj[el]); //will delete fields in excludedFields from queryObj
 
-    //2.Advance filthering
+    //1.1.Advance filthering
     let queryStr = JSON.stringify(queryObj);
     //if match will replace the string with $+matched string. g in there mean it will replace all occurance.
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (match) => `$${match}`);
 
-    const query = Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
+    //2. Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt'); // minus sign will sort it in DECENDING order.
+    }
+
+    //3. Limiting fields
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      // const fields = '-name -duration';
+      query = query.select(fields); //TODO: this line don't work
+    } else {
+      query = query.select('-__v'); //minus here mean EXCLUDE the field
+    }
+
     // const tours = await Tour.find({
     //   duration: req.query.duration,
     //   difficulty: req.query.difficulty,
@@ -52,7 +69,7 @@ exports.getAllTour = async (req, res) => {
     //   .equals('easy');
 
     //EXECUTE QUERY
-    const tours = await query;
+    const tours = await query.exec();
 
     //SEND RESPONSE
     res.status(200).json({
