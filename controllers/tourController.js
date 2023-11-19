@@ -40,7 +40,7 @@ exports.getAllTour = async (req, res) => {
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (match) => `$${match}`);
 
     let query = Tour.find(JSON.parse(queryStr));
-    //2. Sorting
+    // 2. Sorting
     if (req.query.sort) {
       const sortBy = req.query.sort.split(',').join(' ');
       query = query.sort(sortBy);
@@ -56,6 +56,14 @@ exports.getAllTour = async (req, res) => {
     } else {
       query = query.select('-__v'); //minus here mean EXCLUDE the field
     }
+
+    //4. Pagination
+    console.log(req.query);
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    console.log(req.query.page);
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
 
     // const tours = await Tour.find({
     //   duration: req.query.duration,

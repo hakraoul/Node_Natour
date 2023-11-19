@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const Tour = require('./models/tourModel');
 
 dotenv.config({ path: './config.env' }); //read the environment variable in config then will store it
 
@@ -13,6 +12,7 @@ mongoose
   .connect(DB, {
     connectTimeoutMS: 30000, // 30 seconds
     socketTimeoutMS: 30000, // 30 seconds
+    serverSelectionTimeoutMS: 30000,
   }) //connect to Mongodb ATLAS
   // .connect(process.env.DATABASE_LOCAL, {
   //   autoCreate: true,

@@ -10,6 +10,7 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev')); //morgan is a package help with displaying request or we called it logger
 }
 
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); //middleware that allow content of response to be process in the req
 app.use(express.static(`${__dirname}/public`));
 

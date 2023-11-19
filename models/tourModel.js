@@ -50,6 +50,8 @@ const tourSchema = new mongoose.Schema({
     default: Date.now(),
   },
   startDates: [Date],
+  page: { type: Number },
+  limit: { type: Number },
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
