@@ -25,46 +25,65 @@ const Tour = require('../models/tourModel');
 //   next();
 // };
 
-exports.getAllTour = async (req, res) => {
-  try {
-    //BUILD QUERY
+class APIFeatures {
+  constructor(query, queryString) {
+    this.query = query;
+    this.queryString = queryString;
+  }
 
+  filther() {
     //1. Filthering
-    const queryObj = Object.assign(req.query); //copy the object
-    const excludedFields = ['sort', 'page', 'limit'];
-    excludedFields.forEach((el) => delete queryObj[el]); //will delete fields in excludedFields from queryObj
+    const queryObj = Object.assign(this.queryString); //copy the object
+    // const excludedFields = ['sort', 'page', 'limit'];
+    // excludedFields.forEach((el) => delete queryObj[el]); //will delete fields in excludedFields from queryObj
 
     //1.1.Advance filthering
     let queryStr = JSON.stringify(queryObj);
     //if match will replace the string with $+matched string. g in there mean it will replace all occurance.
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (match) => `$${match}`);
 
-    let query = Tour.find(JSON.parse(queryStr));
+    this.query.find(JSON.parse(queryStr));
+
+    return this;
+  }
+
+  sorting() {
     // 2. Sorting
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
+    if (this.queryString.sort) {
+      const sortBy = this.queryString.sort.split(',').join(' ');
+      this.query = this.query.sort(sortBy);
     } else {
-      query = query.sort('-createdAt'); // minus sign will sort it in DECENDING order.
+      this.query = this.query.sort('-createdAt'); // minus sign will sort it in DECENDING order.
     }
 
+    return this;
+  }
+
+  limitFields() {
     //3. Limiting fields
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
+    if (this.queryString.fields) {
+      const fields = this.queryString.fields.split(',').join(' ');
       // const fields = '-name -duration';
-      query = query.select(fields); //TODO: this line don't work
+      this.query = this.query.select(fields); //TODO: this line don't work
     } else {
-      query = query.select('-__v'); //minus here mean EXCLUDE the field
+      this.query = this.query.select('-__v'); //minus here mean EXCLUDE the field
     }
 
-    //4. Pagination
-    console.log(req.query);
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 100;
-    console.log(req.query.page);
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
+    return this;
+  }
 
+  paginate() {
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+    this.query = this.query.skip(skip).limit(limit);
+
+    return this;
+  }
+}
+
+exports.getAllTour = async (req, res) => {
+  try {
     // const tours = await Tour.find({
     //   duration: req.query.duration,
     //   difficulty: req.query.difficulty,
@@ -77,7 +96,12 @@ exports.getAllTour = async (req, res) => {
     //   .equals('easy');
 
     //EXECUTE QUERY
-    const tours = await query.exec();
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filther()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await features.query;
 
     //SEND RESPONSE
     res.status(200).json({
