@@ -3,7 +3,7 @@
 // );
 
 const Tour = require('../models/tourModel');
-
+const APIFeatures = require('../utils/apiFeatures');
 // exports.checkID = (req, res, next, val) => {
 //   const id = req.params.id * 1; //this will turn id from string to number
 //   if (id > tours.length) {
@@ -25,63 +25,6 @@ const Tour = require('../models/tourModel');
 //   next();
 // };
 
-class APIFeatures {
-  constructor(query, queryString) {
-    this.query = query;
-    this.queryString = queryString;
-  }
-
-  filther() {
-    //1. Filthering
-    const queryObj = Object.assign(this.queryString); //copy the object
-    // const excludedFields = ['sort', 'page', 'limit'];
-    // excludedFields.forEach((el) => delete queryObj[el]); //will delete fields in excludedFields from queryObj
-
-    //1.1.Advance filthering
-    let queryStr = JSON.stringify(queryObj);
-    //if match will replace the string with $+matched string. g in there mean it will replace all occurance.
-    queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (match) => `$${match}`);
-
-    this.query.find(JSON.parse(queryStr));
-
-    return this;
-  }
-
-  sorting() {
-    // 2. Sorting
-    if (this.queryString.sort) {
-      const sortBy = this.queryString.sort.split(',').join(' ');
-      this.query = this.query.sort(sortBy);
-    } else {
-      this.query = this.query.sort('-createdAt'); // minus sign will sort it in DECENDING order.
-    }
-
-    return this;
-  }
-
-  limitFields() {
-    //3. Limiting fields
-    if (this.queryString.fields) {
-      const fields = this.queryString.fields.split(',').join(' ');
-      // const fields = '-name -duration';
-      this.query = this.query.select(fields); //TODO: this line don't work
-    } else {
-      this.query = this.query.select('-__v'); //minus here mean EXCLUDE the field
-    }
-
-    return this;
-  }
-
-  paginate() {
-    const page = this.queryString.page * 1 || 1;
-    const limit = this.queryString.limit * 1 || 100;
-    const skip = (page - 1) * limit;
-    this.query = this.query.skip(skip).limit(limit);
-
-    return this;
-  }
-}
-
 exports.getAllTour = async (req, res) => {
   try {
     // const tours = await Tour.find({
@@ -101,8 +44,7 @@ exports.getAllTour = async (req, res) => {
       .sort()
       .limitFields()
       .paginate();
-    const tours = await features.query;
-
+    const tours = await features.query.exec();
     //SEND RESPONSE
     res.status(200).json({
       status: 'success',
